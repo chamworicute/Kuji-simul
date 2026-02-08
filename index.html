@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>이치방쿠지 Final Fix</title>
+    <title>이치방쿠지 시뮬레이터</title>
     <style>
         :root {
             --primary: #ff4757;
             --secondary: #2f3542;
             --bg: #dfe4ea;
-            --card-w: 220px;  /* 카드 크기 약간 줄임 (화면 확보용) */
+            --card-w: 220px;
             --card-h: 330px;
         }
 
@@ -19,15 +19,15 @@
             margin: 0;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* 위쪽 정렬로 변경 */
-            min-height: 100dvh; /* 모바일 실제 높이 기준 */
+            align-items: flex-start;
+            min-height: 100dvh;
             overflow: hidden; 
             overscroll-behavior: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- 1. 설정 화면 --- */
+        /* --- 설정 화면 --- */
         #setup-screen {
             background: white;
             padding: 2rem;
@@ -37,27 +37,47 @@
             width: 85%;
             max-width: 400px;
             z-index: 100;
-            margin-top: 10vh; /* 위에서 좀 떨어뜨림 */
-            max-height: 70vh;
+            margin-top: 5vh;
+            max-height: 85vh;
             display: flex;
             flex-direction: column;
+        }
+
+        .total-input-box {
+            background: #f1f2f6;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .total-input-box label { display:block; font-weight:bold; color:var(--secondary); margin-bottom:5px; }
+        .total-input-box input { 
+            width: 80%; padding: 10px; font-size: 1.5rem; text-align: center; 
+            border: 2px solid var(--secondary); border-radius: 8px; font-weight:bold;
         }
 
         .input-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            margin: 15px 0;
+            margin-bottom: 10px;
             overflow-y: auto;
-            padding-right: 5px;
+            padding: 5px;
         }
 
-        .input-group label {
-            display: block; font-size: 0.8rem; font-weight: 700; color: var(--secondary);
-        }
+        .input-group label { display: block; font-size: 0.9rem; font-weight: 700; color: var(--primary); }
         .input-group input {
             width: 100%; padding: 8px 0; border: 1px solid #ced6e0;
             border-radius: 8px; text-align: center; font-weight: bold; box-sizing: border-box;
+        }
+
+        .calc-info {
+            background: #fff7d6;
+            color: #d35400;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
 
         .start-btn {
@@ -66,21 +86,18 @@
             margin-top: auto;
         }
 
-        /* --- 2. 게임 화면 (여기가 중요) --- */
+        /* --- 게임 화면 --- */
         #game-screen {
             display: none;
             flex-direction: column;
             width: 100%;
-            height: 100dvh; /* 모바일 맞춤 높이 */
+            height: 100dvh;
             position: relative;
             touch-action: none;
-            
-            /* ★ 핵심: 아래쪽을 강제로 비워버림 ★ */
             padding-bottom: env(safe-area-inset-bottom); 
             box-sizing: border-box;
         }
 
-        /* 상단 네비게이션 */
         .top-nav {
             padding: 10px 20px;
             display: flex;
@@ -89,37 +106,38 @@
             height: 60px;
         }
         .home-btn {
-            background: white; border: none; width: 36px; height: 36px;
-            border-radius: 10px; font-size: 1.2rem; cursor: pointer;
+            background: white; border: none; width: 40px; height: 40px;
+            border-radius: 12px; font-size: 1.5rem; cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .status-info { display: flex; gap: 8px; }
         .badge {
-            background: white; padding: 5px 10px; border-radius: 12px;
-            font-size: 0.8rem; font-weight: 700; color: #57606f;
+            background: white; padding: 6px 12px; border-radius: 15px;
+            font-size: 0.85rem; font-weight: 700; color: #57606f;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        /* 메인 스테이지 (카드를 위로 올림) */
+        /* 메인 카드 영역 */
         .stage-area {
-            flex: 1; /* 남은 공간 차지 */
+            flex: 1;
             display: flex;
             justify-content: center;
-            align-items: center; /* 수직 중앙 */
+            align-items: center;
             position: relative;
             width: 100%;
-            
-            /* ★ 핵심: 카드 영역을 살짝 위로 당김 */
-            margin-bottom: 20px; 
+            margin-bottom: 30px; 
         }
 
         .nav-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(255,255,255,0.6); width: 50px; height: 80px;
-            border-radius: 12px; border: none; font-size: 1.5rem;
+            background: rgba(255,255,255,0.5); width: 60px; height: 100px;
+            border-radius: 16px; border: none; font-size: 2rem;
             color: var(--secondary); z-index: 50;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .nav-left { left: 10px; }
-        .nav-right { right: 10px; }
+        .nav-btn:active { background: rgba(255,255,255,0.9); }
+        .nav-left { left: 15px; }
+        .nav-right { right: 15px; }
 
         .card-container {
             width: var(--card-w); height: var(--card-h);
@@ -127,56 +145,55 @@
         }
         .card {
             width: 100%; height: 100%;
-            background: linear-gradient(145deg, #2f3542, #1e272e);
-            border-radius: 16px; position: absolute;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #2f3542, #1e272e); /* 뒷면 색상 */
+            border-radius: 18px; position: absolute;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
-            color: white; border: 3px solid #f1f2f6;
+            color: white; border: 4px solid #f1f2f6;
             transition: transform 0.2s;
         }
-        .card:active { transform: scale(0.95); }
-        .card-no {
-            font-size: 1.1rem; color: #f1c40f; font-weight: bold; margin-bottom: 10px;
-            background: rgba(0,0,0,0.3); padding: 3px 10px; border-radius: 8px;
-        }
-        .card-icon { font-size: 3.5rem; opacity: 0.8; }
-        .card-hint { position: absolute; bottom: 20px; font-size: 0.75rem; color: #ced6e0; opacity: 0.6; }
+        .card:active { transform: scale(0.96); }
 
-        /* 하단 컨트롤 바 (바닥에서 띄움!) */
+        /* 카드 디자인: 번호 없음! 로고만! */
+        .card-logo { 
+            font-size: 5rem; 
+            opacity: 0.9; 
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+        }
+        .card-sub { font-size: 1.2rem; font-weight: bold; opacity: 0.5; margin-top: 10px; letter-spacing: 2px;}
+
+        /* 하단 컨트롤 */
         .bottom-controls {
             background: white;
-            /* ★ 핵심: 아래쪽에 거대한 패딩을 줘서 버튼을 위로 밀어올림 ★ */
-            padding: 15px 25px 50px 25px; 
-            border-radius: 25px 25px 0 0;
+            padding: 15px 25px 40px 25px;
+            border-radius: 30px 30px 0 0;
             box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-            display: flex; flex-direction: column; gap: 10px;
+            display: flex; flex-direction: column; gap: 12px;
             z-index: 60;
-            
-            /* 화면 하단에서 조금 떠있는 느낌 주거나 딱 붙이되 내부 여백 확보 */
             padding-bottom: calc(30px + env(safe-area-inset-bottom));
         }
 
         .selected-bar {
             display: flex; justify-content: center; align-items: center;
-            height: 20px; color: #747d8c; font-size: 0.8rem; font-weight: bold; gap: 6px;
+            height: 20px; color: #747d8c; font-size: 0.85rem; font-weight: bold; gap: 6px;
         }
-        .dot { width:8px; height:8px; background:#dfe4ea; border-radius:50%; }
+        .dot { width:10px; height:10px; background:#dfe4ea; border-radius:50%; }
         .dot.active { background: var(--primary); transform:scale(1.2); }
 
-        .btn-group { display: flex; gap: 10px; height: 50px; }
-        .btn { border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; }
+        .btn-group { display: flex; gap: 12px; height: 55px; }
+        .btn { border: none; border-radius: 14px; font-size: 1.1rem; font-weight: bold; }
         .btn-shuffle { flex: 1; background: #f1f2f6; color: var(--secondary); }
         .btn-draw { flex: 2; background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4); }
         .btn-draw:disabled { background: #dcdde1; color: #a4b0be; box-shadow: none; }
 
         /* 애니메이션 */
-        .anim-next { animation: slideNext 0.3s ease-in-out; }
-        .anim-prev { animation: slidePrev 0.3s ease-in-out; }
+        .anim-next { animation: slideNext 0.25s ease-in-out; }
+        .anim-prev { animation: slidePrev 0.25s ease-in-out; }
         .anim-drop { animation: dropDown 0.3s ease-in forwards; }
         .anim-shake { animation: shake 0.4s; }
 
-        @keyframes slideNext { 0%{transform:translateX(0)} 100%{transform:translateX(0) scale(0.9); opacity:1;} } /* 간소화 */
+        @keyframes slideNext { 0%{transform:translateX(0)} 100%{transform:translateX(0) scale(0.85); opacity:1;} }
         @keyframes dropDown { 0%{transform:translateY(0)} 100%{transform:translateY(150px) scale(0.5); opacity:0;} }
         @keyframes shake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(5deg)} 75%{transform:rotate(-5deg)} }
 
@@ -186,25 +203,37 @@
             background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center;
         }
         .result-box {
-            background: white; width: 80%; max-width: 350px; padding: 25px;
+            background: white; width: 85%; max-width: 350px; padding: 25px;
             border-radius: 20px; text-align: center; max-height: 60vh; overflow-y: auto;
         }
         .result-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
             gap: 8px; margin: 15px 0;
         }
-        .res-item { background: #f1f2f6; border-radius: 8px; padding: 8px; border: 2px solid #ddd; }
-        .top-prize { border-color: #ffa502; background: #fff7d6; color: #e67e22; }
+        .res-item { background: #f1f2f6; border-radius: 10px; padding: 12px 5px; border: 2px solid #ddd; }
+        .top-prize { border-color: #ffa502; background: #fff7d6; color: #e67e22; animation: pulse 1s infinite;}
+        @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.05);} 100%{transform:scale(1);} }
 
     </style>
 </head>
 <body>
+
     <div id="setup-screen">
-        <h3>🎲 쿠지 설정</h3>
-        <div class="input-grid" id="input-container"></div>
-        <div style="font-weight:bold; color:#747d8c; font-size:0.9rem;">
-            총 <span id="total-preview" style="color:var(--secondary)">0</span>장
+        <h3>🔧 쿠지 설정</h3>
+        
+        <div class="total-input-box">
+            <label>총 쿠지 갯수 (장)</label>
+            <input type="number" id="total-count" value="80" oninput="calcRemaining()">
         </div>
+
+        <div style="text-align:left; margin-left:10px; font-size:0.9rem; font-weight:bold; color:#555;">상위상 갯수 (A~F)</div>
+        <div class="input-grid" id="input-container">
+            </div>
+
+        <div class="calc-info" id="calc-display">
+            나머지 68장은 하위상으로 자동 설정됨
+        </div>
+
         <button class="start-btn" onclick="startGame()">시작하기</button>
     </div>
 
@@ -212,20 +241,20 @@
         <div class="top-nav">
             <button class="home-btn" onclick="goHome()">🏠</button>
             <div class="status-info">
-                <div class="badge">남은: <span id="remain-count">0</span></div>
-                <div class="badge">누적: <span id="draw-sequence">0</span></div>
+                <div class="badge">남은 쿠지: <span id="remain-count" style="color:#ff4757">0</span></div>
             </div>
         </div>
 
         <div class="stage-area">
             <button class="nav-btn nav-left" onclick="actionPrev()">‹</button>
+            
             <div class="card-container" id="card-wrap">
                 <div class="card" id="main-card" onclick="actionSelect()">
-                    <div class="card-no" id="card-no-display">No.??</div>
-                    <div class="card-icon">🎫</div>
-                    <div class="card-hint">터치하여 선택</div>
+                    <div class="card-logo">?</div>
+                    <div class="card-sub">KUJI</div>
                 </div>
             </div>
+
             <button class="nav-btn nav-right" onclick="actionNext()">›</button>
         </div>
 
@@ -242,121 +271,218 @@
 
     <div id="result-modal" onclick="closeModal()">
         <div class="result-box" onclick="event.stopPropagation()">
-            <h3 id="congrats-text" style="color:#ff4757; display:none; margin-top:0;">🎉 대박! 상위상!</h3>
-            <h4 style="margin:10px 0;">결과</h4>
+            <h3 id="congrats-text" style="color:#ff4757; display:none; margin:0 0 10px 0;">🎉 축! 상위상 당첨!</h3>
             <div class="result-grid" id="result-list"></div>
-            <div style="color:#a4b0be; font-size:0.8rem; margin-top:15px;">터치하여 닫기</div>
+            <div style="color:#a4b0be; font-size:0.8rem; margin-top:15px;">화면을 터치하면 닫힙니다</div>
         </div>
     </div>
 
     <script>
-        const prizes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
-        const defaultCounts = { A:2, B:2, C:2, D:2, E:2, F:2, G:12, H:12, I:11, J:11, K:11, L:11 };
-        let kujiPool = [], selectedPool = [], totalDrawn = 0;
-
-        // 초기화
+        const topPrizes = ['A', 'B', 'C', 'D', 'E', 'F'];
+        // 기본값: A~F 각 2개
+        const defaultTopCounts = { A:2, B:2, C:2, D:2, E:2, F:2 };
+        
+        let kujiPool = [];
+        let selectedPool = [];
+        
+        // --- 설정 화면 초기화 ---
         const inputContainer = document.getElementById('input-container');
-        let initSum = 0;
-        prizes.forEach(r => {
-            const cnt = defaultCounts[r]||5; initSum+=cnt;
-            inputContainer.innerHTML += `<div class="input-group"><label>${r}</label><input type="number" class="qty" data-rank="${r}" value="${cnt}" oninput="calcTotal()"></div>`;
+        
+        // A~F 입력칸 생성
+        topPrizes.forEach(rank => {
+            inputContainer.innerHTML += `
+                <div class="input-group">
+                    <label>${rank}상</label>
+                    <input type="number" class="qty-top" value="${defaultTopCounts[rank]}" oninput="calcRemaining()">
+                </div>`;
         });
-        document.getElementById('total-preview').innerText = initSum;
+        
+        // 초기 계산 실행
+        calcRemaining();
 
-        function calcTotal() {
-            let sum = 0; document.querySelectorAll('.qty').forEach(e=>sum+=parseInt(e.value)||0);
-            document.getElementById('total-preview').innerText = sum;
+        // 남은 갯수 계산 함수
+        function calcRemaining() {
+            const total = parseInt(document.getElementById('total-count').value) || 0;
+            let topSum = 0;
+            document.querySelectorAll('.qty-top').forEach(el => topSum += parseInt(el.value)||0);
+            
+            const lowerCount = total - topSum;
+            const display = document.getElementById('calc-display');
+            
+            if (lowerCount < 0) {
+                display.style.background = "#ffcccc";
+                display.style.color = "red";
+                display.innerText = `오류: 총 갯수보다 상위상이 ${Math.abs(lowerCount)}개 더 많습니다!`;
+            } else {
+                display.style.background = "#fff7d6";
+                display.style.color = "#d35400";
+                display.innerText = `나머지 ${lowerCount}장은 '하위상'으로 자동 설정됨`;
+            }
         }
 
+        // --- 게임 시작 ---
         function startGame() {
-            kujiPool = []; selectedPool = []; let id=1;
-            document.querySelectorAll('.qty').forEach(e => {
-                for(let i=0; i<(parseInt(e.value)||0); i++) kujiPool.push({rank:e.dataset.rank, id:id++});
+            const total = parseInt(document.getElementById('total-count').value) || 0;
+            let topSum = 0;
+            const topInputs = document.querySelectorAll('.qty-top');
+            
+            kujiPool = [];
+            selectedPool = [];
+
+            // 상위상 추가
+            topInputs.forEach((el, index) => {
+                const count = parseInt(el.value) || 0;
+                topSum += count;
+                for(let i=0; i<count; i++) {
+                    kujiPool.push(topPrizes[index]); // 'A', 'B'...
+                }
             });
-            if(!kujiPool.length) return alert('쿠지를 넣어주세요');
+
+            // 하위상 계산 및 추가
+            const lowerCount = total - topSum;
+            if (lowerCount < 0) {
+                alert("설정 오류: 상위상 갯수가 총 갯수를 초과했습니다.");
+                return;
+            }
+            
+            for(let i=0; i<lowerCount; i++) {
+                kujiPool.push('하위상');
+            }
+
+            if(kujiPool.length === 0) return alert('쿠지 갯수를 입력해주세요.');
+
+            // 셔플
             shuffleArray(kujiPool);
-            document.getElementById('setup-screen').style.display='none';
-            document.getElementById('game-screen').style.display='flex';
+
+            // 화면 전환
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
             updateUI();
         }
 
+        // --- 홈으로 ---
         function goHome() {
-            if(confirm("초기화면으로 돌아갈까요? (진행상황 초기화)")) {
+            if(confirm("설정 화면으로 돌아가시겠습니까?\n(현재 통은 초기화됩니다)")) {
                 document.getElementById('game-screen').style.display='none';
                 document.getElementById('setup-screen').style.display='flex';
             }
         }
 
+        // --- 액션 로직 ---
         function actionNext() {
-            if(kujiPool.length<=1) return;
-            const c = document.getElementById('main-card'); c.classList.add('anim-next');
+            if(kujiPool.length <= 1) return;
+            const c = document.getElementById('main-card'); 
+            c.classList.add('anim-next');
+            // 데이터 이동: 맨 앞 -> 맨 뒤
             kujiPool.push(kujiPool.shift());
-            setTimeout(()=>{c.classList.remove('anim-next'); updateUI();},250);
+            setTimeout(()=>{c.classList.remove('anim-next'); updateUI();}, 250);
         }
+
         function actionPrev() {
-            if(kujiPool.length<=1) return;
-            const c = document.getElementById('main-card'); c.classList.add('anim-next'); // 재활용
+            if(kujiPool.length <= 1) return;
+            const c = document.getElementById('main-card'); 
+            c.classList.add('anim-next'); // 애니메이션 재활용
+            // 데이터 이동: 맨 뒤 -> 맨 앞
             kujiPool.unshift(kujiPool.pop());
-            setTimeout(()=>{c.classList.remove('anim-next'); updateUI();},250);
+            setTimeout(()=>{c.classList.remove('anim-next'); updateUI();}, 250);
         }
+
         function actionSelect() {
-            if(!kujiPool.length || selectedPool.length>=10) return;
+            if(!kujiPool.length || selectedPool.length >= 10) return;
+            
             const c = document.getElementById('main-card');
-            const clone = c.cloneNode(true); clone.classList.add('anim-drop');
-            clone.style.position='absolute'; clone.style.top='0'; clone.style.zIndex='100';
+            // 떨어지는 애니메이션용 복제
+            const clone = c.cloneNode(true); 
+            clone.classList.add('anim-drop');
+            clone.style.position='absolute'; 
+            clone.style.top='0'; 
+            clone.style.zIndex='100';
             document.getElementById('card-wrap').appendChild(clone);
+            
+            // 데이터 이동: 풀 -> 선택됨
             selectedPool.push(kujiPool.shift());
-            setTimeout(()=>clone.remove(),250); updateUI();
+            
+            setTimeout(()=>clone.remove(), 250); 
+            updateUI();
         }
+
         function actionShuffle() {
             if(!kujiPool.length) return;
-            document.getElementById('main-card').classList.add('anim-shake');
+            const c = document.getElementById('main-card');
+            c.classList.add('anim-shake');
             shuffleArray(kujiPool);
-            setTimeout(()=>{document.getElementById('main-card').classList.remove('anim-shake'); updateUI();},400);
+            setTimeout(()=>{c.classList.remove('anim-shake');}, 400);
         }
+
         function actionDraw() {
             if(!selectedPool.length) return;
-            const list = document.getElementById('result-list'); list.innerHTML='';
+            
+            const list = document.getElementById('result-list'); 
+            list.innerHTML='';
             let jackpot = false;
-            selectedPool.forEach(i => {
-                totalDrawn++;
-                const el = document.createElement('div'); el.className='res-item';
-                if(['A','B','C','D'].includes(i.rank)) { el.classList.add('top-prize'); jackpot=true; }
-                el.innerHTML=`<b style="font-size:1.2rem">${i.rank}</b><br><small style="color:#888">${i.id}</small>`;
+            
+            selectedPool.forEach(rank => {
+                const el = document.createElement('div'); 
+                el.className='res-item';
+                
+                // 상위상 체크 (A~F)
+                if(topPrizes.includes(rank)) { 
+                    el.classList.add('top-prize'); 
+                    jackpot=true; 
+                    el.innerHTML=`<b style="font-size:1.5rem">${rank}상</b>`;
+                } else {
+                    // 하위상
+                    el.innerHTML=`<span style="color:#777; font-size:0.9rem">${rank}</span>`;
+                }
                 list.appendChild(el);
             });
-            document.getElementById('congrats-text').style.display = jackpot?'block':'none';
+            
+            const congrats = document.getElementById('congrats-text');
+            congrats.style.display = jackpot ? 'block' : 'none';
+            
             document.getElementById('result-modal').style.display='flex';
-            selectedPool=[]; updateUI();
+            
+            selectedPool=[]; // 선택 목록 초기화
+            updateUI();
         }
-        
+
         function updateUI() {
-            document.getElementById('remain-count').innerText=kujiPool.length;
-            document.getElementById('draw-sequence').innerText=totalDrawn;
+            document.getElementById('remain-count').innerText = kujiPool.length;
+            
             const c = document.getElementById('main-card');
-            if(kujiPool.length) {
-                document.getElementById('card-no-display').innerText=`No.${kujiPool[0].id}`;
+            // 카드가 없으면 흐리게 처리
+            if(kujiPool.length > 0) {
                 c.style.opacity='1'; c.style.pointerEvents='auto';
             } else {
-                document.getElementById('card-no-display').innerText='End';
                 c.style.opacity='0.5'; c.style.pointerEvents='none';
             }
+
             const dots = document.getElementById('selected-dots');
             const btn = document.getElementById('btn-draw');
+            
             if(!selectedPool.length) {
-                dots.innerHTML=`<span style="color:#bbb">카드를 터치하여 선택</span>`;
+                dots.innerHTML=`<span style="color:#bbb; font-weight:normal">카드를 터치하세요</span>`;
                 btn.disabled=true; btn.innerText='결과 확인';
             } else {
                 dots.innerHTML='';
-                for(let i=0;i<10;i++) dots.innerHTML+=`<div class="dot ${i<selectedPool.length?'active':''}"></div>`;
-                btn.disabled=false; btn.innerText=`${selectedPool.length}장 확인`;
+                for(let i=0; i<10; i++) {
+                    dots.innerHTML += `<div class="dot ${i<selectedPool.length?'active':''}"></div>`;
+                }
+                btn.disabled=false; btn.innerText=`${selectedPool.length}장 뜯기!`;
             }
         }
+
         function closeModal() {
             document.getElementById('result-modal').style.display='none';
-            if(!kujiPool.length && !selectedPool.length) alert('끝! 모두 뽑았습니다.');
+            if(!kujiPool.length && !selectedPool.length) alert('모든 쿠지가 소진되었습니다!');
         }
-        function shuffleArray(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
     </script>
 </body>
 </html>
