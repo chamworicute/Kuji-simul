@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>이치방쿠지 시뮬레이터 Final</title>
+    <title>이치방쿠지 시뮬레이터 Final Ver.</title>
     <style>
         :root {
             --primary: #ff4757;
@@ -21,12 +21,14 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden; /* 스크롤 방지 */
+            /* 핵심: 화면 전체 스크롤 및 튕김 방지 */
+            overflow: hidden; 
+            overscroll-behavior: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- 1. 설정 화면 --- */
+        /* --- 1. 설정 화면 (여기는 스크롤 가능해야 함) --- */
         #setup-screen {
             background: white;
             padding: 2rem;
@@ -36,6 +38,9 @@
             width: 85%;
             max-width: 400px;
             z-index: 100;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .input-grid {
@@ -43,8 +48,8 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
             margin: 20px 0;
-            max-height: 40vh;
-            overflow-y: auto;
+            overflow-y: auto; /* 내부 스크롤 허용 */
+            padding-right: 5px;
         }
 
         .input-group label {
@@ -63,7 +68,7 @@
             text-align: center;
             font-size: 1.1rem;
             font-weight: bold;
-            box-sizing: border-box;
+            box-sizing: border-box; /* 패딩 포함 크기 계산 */
         }
 
         .start-btn {
@@ -76,7 +81,7 @@
             font-size: 1.2rem;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: auto;
             box-shadow: 0 4px 12px rgba(47, 53, 66, 0.3);
         }
 
@@ -87,45 +92,70 @@
             width: 100%;
             height: 100vh;
             position: relative;
+            /* 게임 중엔 터치 제스처로 인한 뒤로가기/새로고침 방지 */
+            touch-action: none; 
         }
 
-        /* 상단 정보바 */
-        .top-bar {
-            padding: 20px;
+        /* 상단 네비게이션 (홈버튼 + 정보) */
+        .top-nav {
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 10;
+            z-index: 20;
         }
+
+        /* 홈 버튼 스타일 */
+        .home-btn {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .home-btn:active { background: #f1f2f6; transform: scale(0.95); }
+
+        .status-info {
+            display: flex;
+            gap: 10px;
+        }
+
         .badge {
             background: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
             font-weight: 700;
             color: #57606f;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .badge span { color: var(--primary); font-size: 1.1rem; }
+        .badge span { color: var(--primary); font-size: 1rem; margin-left: 2px; }
 
-        /* 메인 스테이지 (카드 + 화살표) */
+        /* 메인 스테이지 */
         .stage-area {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
+            width: 100%;
         }
 
-        /* 화살표 버튼 */
+        /* 화살표 버튼 (터치 영역 확대) */
         .nav-btn {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255,255,255,0.6);
-            width: 50px;
-            height: 80px;
-            border-radius: 12px;
+            background: rgba(255,255,255,0.7);
+            width: 60px; /* 더 넓게 */
+            height: 100px; /* 더 길게 */
+            border-radius: 16px;
             border: none;
             font-size: 2rem;
             color: var(--secondary);
@@ -135,11 +165,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
+            transition: all 0.1s;
+            /* 그림자 추가로 입체감 */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
         }
-        .nav-btn:active { background: rgba(255,255,255,0.9); transform: translateY(-50%) scale(0.95); }
-        .nav-left { left: 20px; }
-        .nav-right { right: 20px; }
+        .nav-btn:active { background: rgba(255,255,255,1); transform: translateY(-50%) scale(0.95); }
+        .nav-left { left: 15px; }
+        .nav-right { right: 15px; }
 
         /* 카드 스타일 */
         .card-container {
@@ -162,11 +194,12 @@
             align-items: center;
             color: white;
             border: 4px solid #f1f2f6;
-            cursor: pointer; /* 클릭 가능 표시 */
-            transition: transform 0.3s;
+            cursor: pointer;
+            transition: transform 0.2s; /* 반응 속도 개선 */
         }
         
-        .card:active { transform: scale(0.96); }
+        /* 카드 눌렀을 때 쏙 들어가는 느낌 */
+        .card:active { transform: scale(0.95); }
 
         .card-no {
             font-size: 1.2rem;
@@ -177,25 +210,22 @@
             padding: 4px 12px;
             border-radius: 10px;
         }
-
         .card-icon { font-size: 4rem; opacity: 0.8; }
         .card-hint { 
             position: absolute; bottom: 30px; 
             font-size: 0.8rem; color: #ced6e0; opacity: 0.6;
-            animation: blink 2s infinite;
         }
-
-        @keyframes blink { 0%,100%{opacity:0.6} 50%{opacity:1} }
 
         /* 하단 컨트롤 바 */
         .bottom-controls {
             background: white;
-            padding: 20px 30px 40px 30px; /* 아이폰 하단 바 고려 */
+            padding: 15px 25px 30px 25px;
             border-radius: 30px 30px 0 0;
             box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
+            z-index: 60;
         }
 
         /* 선택된 목록 표시줄 */
@@ -203,11 +233,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
-            height: 30px;
+            height: 25px;
             color: #747d8c;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: bold;
+            gap: 8px;
         }
         .dot { width:10px; height:10px; background:#dfe4ea; border-radius:50%; transition:0.3s; }
         .dot.active { background: var(--primary); transform:scale(1.2); }
@@ -216,7 +246,7 @@
         .btn-group {
             display: flex;
             gap: 15px;
-            height: 60px;
+            height: 55px;
         }
 
         .btn {
@@ -227,7 +257,7 @@
             cursor: pointer;
             transition: transform 0.1s;
         }
-        .btn:active { transform: scale(0.97); }
+        .btn:active { transform: scale(0.95); }
 
         .btn-shuffle {
             flex: 1;
@@ -236,7 +266,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
         }
 
         .btn-draw {
@@ -244,46 +273,42 @@
             background: var(--primary);
             color: white;
             box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-            font-size: 1.3rem;
+            font-size: 1.2rem;
         }
         .btn-draw:disabled {
             background: #dcdde1;
             color: #a4b0be;
             box-shadow: none;
-            cursor: not-allowed;
         }
 
-        /* --- 애니메이션 --- */
-        /* 오른쪽으로 보내기 */
+        /* 애니메이션 */
         @keyframes slideNext {
             0% { transform: translateX(0) scale(1); opacity:1; z-index:10; }
-            50% { transform: translateX(120%) scale(0.8); opacity:0; z-index:0; }
+            50% { transform: translateX(100%) rotate(10deg) scale(0.8); opacity:0; z-index:0; }
             100% { transform: translateX(0) scale(0.9); opacity:1; z-index:0; }
         }
-        /* 왼쪽에서 가져오기 */
         @keyframes slidePrev {
-            0% { transform: translateX(-120%) scale(0.8); opacity:0; z-index:0; }
-            50% { transform: translateX(-60%) scale(0.9); opacity:0.5; z-index:10; }
+            0% { transform: translateX(-100%) rotate(-10deg) scale(0.8); opacity:0; z-index:0; }
+            50% { transform: translateX(-50%) rotate(-5deg) scale(0.9); opacity:0.5; z-index:10; }
             100% { transform: translateX(0) scale(1); opacity:1; z-index:10; }
         }
-        /* 아래로 선택됨 */
         @keyframes dropDown {
             0% { transform: translateY(0) scale(1); opacity:1; }
-            100% { transform: translateY(300px) scale(0.2); opacity:0; }
+            100% { transform: translateY(200px) scale(0.5); opacity:0; }
         }
-
-        .anim-next { animation: slideNext 0.4s ease-in-out; }
-        .anim-prev { animation: slidePrev 0.4s ease-in-out; }
-        .anim-drop { animation: dropDown 0.4s ease-in forwards; }
-        .anim-shake { animation: shake 0.5s; }
         @keyframes shake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(5deg)} 75%{transform:rotate(-5deg)} }
 
-        /* --- 결과창 --- */
+        .anim-next { animation: slideNext 0.3s ease-in-out; }
+        .anim-prev { animation: slidePrev 0.3s ease-in-out; }
+        .anim-drop { animation: dropDown 0.3s ease-in forwards; }
+        .anim-shake { animation: shake 0.4s; }
+
+        /* 결과창 */
         #result-modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             z-index: 999;
             justify-content: center;
             align-items: center;
@@ -296,7 +321,7 @@
             padding: 30px;
             border-radius: 24px;
             text-align: center;
-            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: popUp 0.3s;
         }
         @keyframes popUp { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
         
@@ -314,8 +339,6 @@
         }
         .res-rank { font-size: 1.5rem; font-weight: 900; display: block; }
         .res-no { font-size: 0.7rem; color: #747d8c; }
-        
-        /* 상위상 강조 */
         .top-prize { border-color: #ffa502; background: #fff7d6; color: #e67e22; }
 
     </style>
@@ -323,7 +346,7 @@
 <body>
 
     <div id="setup-screen">
-        <h2 style="margin-top:0;">🎲 쿠지 시뮬레이터</h2>
+        <h2 style="margin-top:0;">🎲 쿠지 설정</h2>
         <div class="input-grid" id="input-container">
             </div>
         <div style="font-weight:bold; color:#747d8c; margin-bottom:10px;">
@@ -333,9 +356,13 @@
     </div>
 
     <div id="game-screen">
-        <div class="top-bar">
-            <div class="badge">남은 쿠지: <span id="remain-count">0</span></div>
-            <div class="badge">누적: <span id="draw-sequence">0</span>회</div>
+        <div class="top-nav">
+            <button class="home-btn" onclick="goHome()">🏠</button>
+            
+            <div class="status-info">
+                <div class="badge">남은 쿠지 <span><span id="remain-count">0</span></span></div>
+                <div class="badge">누적 <span><span id="draw-sequence">0</span></span></div>
+            </div>
         </div>
 
         <div class="stage-area">
@@ -345,7 +372,7 @@
                 <div class="card" id="main-card" onclick="actionSelect()">
                     <div class="card-no" id="card-no-display">No.??</div>
                     <div class="card-icon">🎫</div>
-                    <div class="card-hint">터치해서 선택</div>
+                    <div class="card-hint">터치하여 선택</div>
                 </div>
             </div>
 
@@ -354,7 +381,7 @@
 
         <div class="bottom-controls">
             <div class="selected-bar" id="selected-dots">
-                <span style="font-size:0.8rem">선택하려면 카드를 터치하세요</span>
+                <span>카드를 터치하세요</span>
             </div>
 
             <div class="btn-group">
@@ -370,23 +397,21 @@
 
     <div id="result-modal" onclick="closeModal()">
         <div class="result-box" onclick="event.stopPropagation()">
-            <h2 id="congrats-text" style="color:#ff4757; display:none;">🎉 대박! 상위상 당첨!</h2>
-            <h3 style="margin:10px 0;">당첨 결과</h3>
+            <h2 id="congrats-text" style="color:#ff4757; display:none;">🎉 상위상 당첨!</h2>
+            <h3 style="margin:10px 0;">결과</h3>
             <div class="result-grid" id="result-list"></div>
-            <div style="color:#a4b0be; font-size:0.9rem; margin-top:20px;">화면을 터치하면 계속합니다</div>
+            <div style="color:#a4b0be; font-size:0.9rem; margin-top:20px;">터치하여 계속하기</div>
         </div>
     </div>
 
     <script>
-        // --- 설정 데이터 ---
         const prizes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
         const defaultCounts = { A:2, B:2, C:2, D:2, E:2, F:2, G:12, H:12, I:11, J:11, K:11, L:11 };
         
-        let kujiPool = [];     // 현재 통에 있는 쿠지들
-        let selectedPool = []; // 뽑으려고 선택한 쿠지들 (최대 10)
-        let totalDrawn = 0;    // 누적 카운트
+        let kujiPool = [];
+        let selectedPool = [];
+        let totalDrawn = 0;
 
-        // --- 초기화 ---
         const inputContainer = document.getElementById('input-container');
         let initialTotal = 0;
 
@@ -407,7 +432,6 @@
             document.getElementById('total-preview').innerText = sum;
         }
 
-        // --- 게임 시작 ---
         function startGame() {
             kujiPool = [];
             selectedPool = [];
@@ -421,84 +445,69 @@
 
             if(kujiPool.length === 0) return alert('최소 1장은 있어야죠!');
 
-            // 1차 셔플
             shuffleArray(kujiPool);
-
             document.getElementById('setup-screen').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             updateUI();
         }
 
-        // --- 핵심 액션 로직 ---
+        // --- 홈으로 가기 (NEW) ---
+        function goHome() {
+            if(confirm("초기화면으로 돌아가시겠습니까?\n(현재 진행 상황은 초기화됩니다)")) {
+                // 게임 상태 초기화 및 화면 전환
+                document.getElementById('game-screen').style.display = 'none';
+                document.getElementById('setup-screen').style.display = 'flex';
+                // (선택사항) 뽑은 횟수 초기화 등을 원하시면 여기에 추가
+                // totalDrawn = 0; 
+                selectedPool = [];
+                kujiPool = [];
+            }
+        }
 
-        // 1. 다음 카드 (오른쪽 화살표) : 맨 위 -> 맨 아래로
         function actionNext() {
             if(kujiPool.length <= 1) return;
-            
             const card = document.getElementById('main-card');
             card.classList.add('anim-next');
-
-            // 데이터 이동
             kujiPool.push(kujiPool.shift());
-
-            setTimeout(() => {
-                card.classList.remove('anim-next');
-                updateUI();
-            }, 400);
+            setTimeout(() => { card.classList.remove('anim-next'); updateUI(); }, 300);
         }
 
-        // 2. 이전 카드 (왼쪽 화살표) : 맨 아래 -> 맨 위로
         function actionPrev() {
             if(kujiPool.length <= 1) return;
-
             const card = document.getElementById('main-card');
-            // 이전 카드는 왼쪽에서 들어오는 느낌을 주기 위해 데이터 먼저 변경 후 렌더링 방식 조정 가능하지만
-            // 간단하게 역방향 데이터 이동 수행
-            kujiPool.unshift(kujiPool.pop());
-            
-            // UI 업데이트 먼저 하고 애니메이션? No, 애니메이션 클래스 붙이고 갱신
-            // 여기선 심플하게 애니메이션만
+            kujiPool.unshift(kujiPool.pop()); // 데이터 먼저 이동
             card.classList.add('anim-prev');
-            setTimeout(() => {
-                card.classList.remove('anim-prev');
-                updateUI();
-            }, 400);
+            setTimeout(() => { card.classList.remove('anim-prev'); updateUI(); }, 300);
         }
 
-        // 3. 카드 선택 (카드 클릭 시)
         function actionSelect() {
             if(kujiPool.length === 0) return;
-            if(selectedPool.length >= 10) return alert("한 번에 10장까지만!");
+            if(selectedPool.length >= 10) return alert("최대 10장까지만!");
 
             const card = document.getElementById('main-card');
             
-            // 시각 효과: 아래로 떨어짐
+            // 시각적 효과 (복제본 사용)
             const clone = card.cloneNode(true);
             clone.classList.add('anim-drop');
             clone.style.position = 'absolute';
             clone.style.top = '0';
+            clone.style.zIndex = '100';
             document.getElementById('card-wrap').appendChild(clone);
             
-            // 데이터 이동
             selectedPool.push(kujiPool.shift());
             
-            setTimeout(() => clone.remove(), 400);
+            setTimeout(() => clone.remove(), 300);
             updateUI();
         }
 
-        // 4. 섞기
         function actionShuffle() {
             if(kujiPool.length === 0) return;
             const card = document.getElementById('main-card');
             card.classList.add('anim-shake');
             shuffleArray(kujiPool);
-            setTimeout(() => {
-                card.classList.remove('anim-shake');
-                updateUI();
-            }, 500);
+            setTimeout(() => { card.classList.remove('anim-shake'); updateUI(); }, 400);
         }
 
-        // 5. 뽑기 (결과 확인)
         function actionDraw() {
             if(selectedPool.length === 0) return;
             
@@ -522,18 +531,14 @@
             congrats.style.display = isJackpot ? 'block' : 'none';
             document.getElementById('result-modal').style.display = 'flex';
 
-            selectedPool = []; // 선택 초기화
+            selectedPool = [];
             updateUI();
         }
 
-        // --- 유틸리티 & UI 업데이트 ---
-
         function updateUI() {
-            // 남은 갯수
             document.getElementById('remain-count').innerText = kujiPool.length;
             document.getElementById('draw-sequence').innerText = totalDrawn;
 
-            // 카드 정보 표시
             const cardNo = document.getElementById('card-no-display');
             const mainCard = document.getElementById('main-card');
             
@@ -547,12 +552,11 @@
                 mainCard.style.pointerEvents = 'none';
             }
 
-            // 하단 선택된 점(Dot) 표시
             const dotsContainer = document.getElementById('selected-dots');
             const btnDraw = document.getElementById('btn-draw');
 
             if(selectedPool.length === 0) {
-                dotsContainer.innerHTML = `<span style="font-size:0.8rem; color:#a4b0be;">카드를 터치하여 선택 (최대 10장)</span>`;
+                dotsContainer.innerHTML = `<span style="font-size:0.8rem; color:#a4b0be;">카드를 터치하여 선택</span>`;
                 btnDraw.disabled = true;
                 btnDraw.innerText = "결과 확인";
             } else {
@@ -563,14 +567,14 @@
                     if(i < selectedPool.length) dotsContainer.appendChild(dot);
                 }
                 btnDraw.disabled = false;
-                btnDraw.innerText = `${selectedPool.length}장 확인!`;
+                btnDraw.innerText = `${selectedPool.length}장 확인`;
             }
         }
 
         function closeModal() {
             document.getElementById('result-modal').style.display = 'none';
             if(kujiPool.length === 0 && selectedPool.length === 0) {
-                alert("모두 소진되었습니다! (새로고침)");
+                alert("모두 소진되었습니다!");
             }
         }
 
